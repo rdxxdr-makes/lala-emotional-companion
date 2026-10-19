@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep new product features inside the existing TanStack Start route structure, with shared browser-safe behavior in `src/lib/` and related tests in `src/test/`, because the project requires SSR-compatible routing and colocated coverage.
