@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getLalaMood, getLalaReply, type LalaMood } from "@/lib/lala-responses";
-
+import { getLalaGeminiReply } from "@/lib/lala-chat.functions";
 type Companion = "sami" | "ammy";
 type Message = { id: string; role: "user" | "lala"; text: string; mood: LalaMood };
 type SpeechRecognitionResultLike = { 0?: { transcript?: string } };
@@ -204,32 +204,67 @@ function Lala() {
     window.speechSynthesis.speak(utterance);
   }, []);
 
-  const sendMessage = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const text = input.trim();
-    if (!text) return;
-    const currentMood = getLalaMood(text);
-    const reply = getLalaReply(text);
-    const userMessage: Message = {
-      id: `user-${Date.now()}`,
-      role: "user",
-      text,
-      mood: currentMood === "crisis" ? "sad" : currentMood,
-    };
-    const lalaMessage: Message = {
-      id: `lala-${Date.now()}-${messages.length}`,
-      role: "lala",
-      text: reply,
-      mood: currentMood === "crisis" ? "sad" : currentMood,
-    };
-    setMessages((current) => [...current, userMessage, lalaMessage].slice(-32));
-    setMood(lalaMessage.mood);
-    setInput("");
-    setNotice("");
-    speak(reply);
+  const sendMessage = async (event: FormEvent<HTMLFormElement>) => {
+  event.preventDefault();
+
+  const text = input.trim();
+  if (!text) return;
+
+  const currentMood = getLalaMood(text);
+
+  const userMessage: Message = {
+    id: `user-${Date.now()}`,
+    role: "user",
+    text,
+    mood: currentMood === "crisis" ? "sad" : currentMood,
   };
 
-  const startListening = () => {
+  const conversationForGemini = [...messages, userMessage]
+    .slice(-12)
+    .map((message) => ({
+      role: message.role,
+      text: message.text,
+    }));
+
+  setMessages((current) => [...current, userMessage].slice(-32));
+  setMood(userMessage.mood);
+  setInput("");
+  setNotice("");
+
+  try {
+    const result = await getLalaGeminiReply({
+      data: {
+        companion,
+        messages: conversationForGemini,
+      },
+    });
+
+    const lalaMessage: Message = {
+      id: `lala-${Date.now()}`,
+      role: "lala",
+      text: result.reply,
+      mood: userMessage.mood,
+    };
+
+    setMessages((current) => [...current, lalaMessage].slice(-32));
+    setMood(lalaMessage.mood);
+    speak(result.reply);
+  } catch {
+    const fallbackReply = getLalaReply(text);
+
+    const lalaMessage: Message = {
+      id: `lala-${Date.now()}`,
+      role: "lala",
+      text: fallbackReply,
+      mood: userMessage.mood,
+    };
+
+    setMessages((current) => [...current, lalaMessage].slice(-32));
+    setNotice("I’m having a small connection problem, so I’m using my offline replies for now.");
+    speak(fallbackReply);
+  }
+};
+   
     const speechWindow = window as SpeechWindow;
     const Recognition = speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
     if (!Recognition) {
