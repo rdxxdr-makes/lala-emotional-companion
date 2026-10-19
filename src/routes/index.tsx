@@ -156,7 +156,7 @@ function Lala() {
           ) {
             const restored = record.messages.slice(-32);
             setMessages(restored);
-            const lastReply = restored.findLast((message) => message.role === "lala");
+            const lastReply = [...restored].reverse().find((message: Message) => message.role === "lala");
             if (lastReply) setMood(lastReply.mood);
           }
         }
