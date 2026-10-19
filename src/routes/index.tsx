@@ -204,92 +204,108 @@ function Lala() {
     window.speechSynthesis.speak(utterance);
   }, []);
 
-  const sendMessage = async (event: FormEvent<HTMLFormElement>) => {
-  event.preventDefault();
+    const sendMessage = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
 
-  const text = input.trim();
-  if (!text) return;
+    const text = input.trim();
+    if (!text) return;
 
-  const currentMood = getLalaMood(text);
+    const currentMood = getLalaMood(text);
 
-  const userMessage: Message = {
-    id: `user-${Date.now()}`,
-    role: "user",
-    text,
-    mood: currentMood === "crisis" ? "sad" : currentMood,
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      role: "user",
+      text,
+      mood: currentMood === "crisis" ? "sad" : currentMood,
+    };
+
+    const conversationForGemini = [...messages, userMessage]
+      .slice(-12)
+      .map((message) => ({
+        role: message.role,
+        text: message.text,
+      }));
+
+    setMessages((current) => [...current, userMessage].slice(-32));
+    setMood(userMessage.mood);
+    setInput("");
+    setNotice("");
+
+    try {
+      const result = await getLalaGeminiReply({
+        data: {
+          companion,
+          messages: conversationForGemini,
+        },
+      });
+
+      const lalaMessage: Message = {
+        id: `lala-${Date.now()}`,
+        role: "lala",
+        text: result.reply,
+        mood: userMessage.mood,
+      };
+
+      setMessages((current) => [...current, lalaMessage].slice(-32));
+      setMood(lalaMessage.mood);
+      speak(result.reply);
+    } catch {
+      const fallbackReply = getLalaReply(text);
+
+      const lalaMessage: Message = {
+        id: `lala-${Date.now()}`,
+        role: "lala",
+        text: fallbackReply,
+        mood: userMessage.mood,
+      };
+
+      setMessages((current) => [...current, lalaMessage].slice(-32));
+      setNotice("I’m having a small connection problem, so I’m using my offline replies for now.");
+      speak(fallbackReply);
+    }
   };
 
-  const conversationForGemini = [...messages, userMessage]
-    .slice(-12)
-    .map((message) => ({
-      role: message.role,
-      text: message.text,
-    }));
-
-  setMessages((current) => [...current, userMessage].slice(-32));
-  setMood(userMessage.mood);
-  setInput("");
-  setNotice("");
-
-  try {
-    const result = await getLalaGeminiReply({
-      data: {
-        companion,
-        messages: conversationForGemini,
-      },
-    });
-
-    const lalaMessage: Message = {
-      id: `lala-${Date.now()}`,
-      role: "lala",
-      text: result.reply,
-      mood: userMessage.mood,
-    };
-
-    setMessages((current) => [...current, lalaMessage].slice(-32));
-    setMood(lalaMessage.mood);
-    speak(result.reply);
-  } catch {
-    const fallbackReply = getLalaReply(text);
-
-    const lalaMessage: Message = {
-      id: `lala-${Date.now()}`,
-      role: "lala",
-      text: fallbackReply,
-      mood: userMessage.mood,
-    };
-
-    setMessages((current) => [...current, lalaMessage].slice(-32));
-    setNotice("I’m having a small connection problem, so I’m using my offline replies for now.");
-    speak(fallbackReply);
-  }
-};
-   
+  const startListening = () => {
     const speechWindow = window as SpeechWindow;
-    const Recognition = speechWindow.SpeechRecognition ?? speechWindow.webkitSpeechRecognition;
+    const Recognition =
+      speechWindow.SpeechRecognition ??
+      speechWindow.webkitSpeechRecognition;
+
     if (!Recognition) {
       setNotice("Microphone dictation isn’t available in this browser.");
       return;
     }
+
     if (listening) {
       recognition.current?.stop();
       setListening(false);
       return;
     }
+
     const currentRecognition = new Recognition();
     currentRecognition.lang = "en-US";
     currentRecognition.interimResults = false;
     currentRecognition.continuous = false;
+
     currentRecognition.onresult = (event) => {
       const transcript = event.results[0]?.[0]?.transcript;
-      if (transcript) setInput((current) => [current.trim(), transcript].filter(Boolean).join(" "));
+
+      if (transcript) {
+        setInput((current) =>
+          [current.trim(), transcript].filter(Boolean).join(" "),
+        );
+      }
     };
+
     currentRecognition.onerror = () => {
       setNotice("We couldn’t hear that. Please try again or type a message.");
       setListening(false);
     };
+
     currentRecognition.onend = () => setListening(false);
+
     recognition.current = currentRecognition;
+
     try {
       currentRecognition.start();
       setListening(true);
@@ -299,7 +315,6 @@ function Lala() {
       setListening(false);
     }
   };
-
   return (
     <main className={`lala-page mood-${mood}`}>
       <header className="topbar">
