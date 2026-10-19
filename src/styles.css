@@ -206,8 +206,33 @@
 .eye-shine { fill: oklch(1 0 0 / 90%); }
 .nose { fill: none; stroke: var(--skin-shadow); stroke-linecap: round; stroke-width: 3; }
 .blush { fill: oklch(0.69 0.12 15 / 22%); opacity: .68; transition: opacity .3s ease; }
-.mouth { fill: none; stroke: oklch(0.43 0.13 14); stroke-linecap: round; stroke-width: 4; transition: d 250ms ease, stroke-width 180ms ease; }
-.portrait-speaking .mouth { animation: mouth-talk 190ms ease-in-out infinite alternate; }
+.mouth-group {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.mouth-opening {
+  fill: oklch(0.29 0.08 14);
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.mouth {
+  fill: none;
+  stroke: oklch(0.43 0.13 14);
+  stroke-linecap: round;
+  stroke-width: 4;
+}
+
+.portrait-speaking .mouth-group {
+  animation: mouth-talk 190ms ease-in-out infinite alternate;
+}
+
+.portrait-speaking .mouth-opening {
+  opacity: 0.92;
+  animation: mouth-open 190ms ease-in-out infinite alternate;
+}
 .mood-happy .blush { opacity: 1; }
 .mood-sad .brow { stroke-width: 5.4; }
 .mood-tired .eye-white, .mood-tired .pupil { animation-duration: 7.8s; }
@@ -261,7 +286,15 @@
 @keyframes avatar-breathe { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-6px) scale(1.008); } }
 @keyframes halo-pulse { 0%, 100% { opacity: .66; transform: scale(.98); } 50% { opacity: 1; transform: scale(1.015); } }
 @keyframes blink { 0%, 41%, 45%, 89%, 93%, 100% { transform: scaleY(1); } 43%, 91% { transform: scaleY(.08); } }
-@keyframes mouth-talk { from { transform: scaleY(.7); } to { transform: scaleY(1.55); } }
+@keyframes mouth-talk {
+  from { transform: translateY(1px) scaleY(.9); }
+  to { transform: translateY(-1px) scaleY(1.08); }
+}
+
+@keyframes mouth-open {
+  from { transform: scaleY(.7); }
+  to { transform: scaleY(3.2); }
+}
 @keyframes message-in { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes mic-pulse { 0%, 100% { box-shadow: 0 0 0 0 oklch(0.7 0.15 22 / 0%); } 50% { box-shadow: 0 0 0 4px oklch(0.7 0.15 22 / 13%); } }
 
