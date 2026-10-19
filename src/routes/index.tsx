@@ -113,7 +113,10 @@ function CompanionAvatar({ companion, mood, speaking }: { companion: Companion; 
       <path className="nose" d="M219 227q-7 25 3 28" />
       <ellipse className="blush" cx="163" cy="257" rx="15" ry="7" />
       <ellipse className="blush" cx="277" cy="257" rx="15" ry="7" />
-      <path className="mouth" d={mouth} />
+      <g className="mouth-group">
+  <ellipse className="mouth-opening" cx="220" cy="278" rx="17" ry="2.5" />
+  <path className="mouth" d={mouth} />
+</g>
       <path className="collar" d="m168 356 52 46-19 14-35-43Zm104 0-52 46 19 14 35-43Z" />
       <path className="shirt-stitch" d="M220 410v69" />
     </svg>
