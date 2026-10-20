@@ -4,8 +4,14 @@ import { useCallback, useEffect, useRef, useState, type FormEvent } from "react"
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getLalaMood, getLalaReply, type LalaMood } from "@/lib/lala-responses";
-import { getLalaGeminiReply } from "@/lib/lala-chat.functions";
 type Companion = "sami" | "ammy";
 type Message = { id: string; role: "user" | "lala"; text: string; mood: LalaMood };
 type SpeechRecognitionResultLike = { 0?: { transcript?: string } };
@@ -69,6 +75,15 @@ function CompanionAvatar({ companion, mood, speaking }: { companion: Companion; 
           <stop className="hair-light" offset="0" />
           <stop className="hair-dark" offset="1" />
         </linearGradient>
+        <linearGradient id="skin-shine" x1="0" x2="1" y1="0" y2="1">
+          <stop className="skin-light" offset="0" />
+          <stop className="skin-mid" offset="0.52" />
+          <stop className="skin-deep" offset="1" />
+        </linearGradient>
+        <radialGradient id="shirt-shimmer" cx="0.38" cy="0.04" r="0.86">
+          <stop className="shirt-highlight" offset="0" />
+          <stop className="shirt-clear" offset="1" />
+        </radialGradient>
         <linearGradient id="shirt-shine" x1="0" x2="1" y1="0" y2="1">
           <stop className="shirt-light" offset="0" />
           <stop className="shirt-dark" offset="1" />
@@ -76,11 +91,13 @@ function CompanionAvatar({ companion, mood, speaking }: { companion: Companion; 
       </defs>
       <path className="shoulders" d="M91 480c4-69 27-106 76-120l53-14 53 14c49 14 72 51 76 120Z" />
       <path className="shirt" d="m168 356 52 46 52-46 31 17-26 107H163l-26-107Z" />
+      <path className="shirt-sheen" d="M169 359 220 401l51-42 23 14-23 19-50 47-51-47-24-19Z" />
       <path className="neck" d="M191 280h58v84c-16 27-42 27-58 0Z" />
       <path className="hair-behind" d={sami ? "M132 158q-28 22-27 75l12 106q5 40 43 51l15-146Z" : "M137 155q-29 29-17 95l12 86q9 41 44 43l8-195Z"} />
       <ellipse className="ear" cx="129" cy="215" rx="17" ry="26" />
       <ellipse className="ear" cx="311" cy="215" rx="17" ry="26" />
       <ellipse className="face" cx="220" cy="198" rx="91" ry="111" />
+      <ellipse className="face-light" cx="195" cy="157" rx="45" ry="52" />
       {sami ? (
         <g className="hair-front">
           <path d="M126 180q-3-103 92-111 94-2 98 91l-9 45q-13-39-26-63-31 13-69 10-31-2-67-18-3 31-21 70Z" />
@@ -131,6 +148,8 @@ function Lala() {
   const [speaking, setSpeaking] = useState(false);
   const [listening, setListening] = useState(false);
   const [speechAvailable, setSpeechAvailable] = useState(false);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [voiceChoice, setVoiceChoice] = useState("automatic");
   const [notice, setNotice] = useState("");
   const messageList = useRef<HTMLDivElement>(null);
   const recognition = useRef<SpeechRecognitionLike | null>(null);
@@ -168,13 +187,18 @@ function Lala() {
       localStorage.removeItem(storageKey);
     }
 
-    const speechWindow = window as SpeechWindow;
     setSpeechAvailable("speechSynthesis" in window);
+    const speech = window.speechSynthesis;
+    const refreshVoices = () => setVoices(speech?.getVoices() ?? []);
+    refreshVoices();
+    speech?.addEventListener("voiceschanged", refreshVoices);
+    const speechWindow = window as SpeechWindow;
     if (!speechWindow.SpeechRecognition && !speechWindow.webkitSpeechRecognition) {
       setNotice("Microphone dictation isn’t available in this browser.");
     }
 
     return () => {
+      speech?.removeEventListener("voiceschanged", refreshVoices);
       window.speechSynthesis?.cancel();
       recognition.current?.stop();
     };
@@ -196,13 +220,30 @@ function Lala() {
     if (!("speechSynthesis" in window) || typeof SpeechSynthesisUtterance === "undefined") return;
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.94;
-    utterance.pitch = 1.04;
+    const preferredTerms = companion === "sami"
+      ? /female|samantha|aria|jenny|zoe|ava|serena/i
+      : /male|david|guy|ryan|alex|daniel|james/i;
+    const qualityTerms = /microsoft|google|natural|online|neural|premium|enhanced/i;
+    const rankedVoices = voices
+      .filter((voice) => voice.lang.toLowerCase().startsWith("en"))
+      .sort((first, second) => {
+        const score = (voice: SpeechSynthesisVoice) =>
+          (qualityTerms.test(`${voice.name} ${voice.voiceURI}`) ? 3 : 0) +
+          (preferredTerms.test(voice.name) ? 2 : 0) +
+          (voice.localService ? 0 : 1);
+        return score(second) - score(first);
+      });
+    const selectedVoice = voiceChoice === "automatic"
+      ? rankedVoices[0]
+      : voices.find((voice) => voice.voiceURI === voiceChoice);
+    if (selectedVoice) utterance.voice = selectedVoice;
+    utterance.rate = companion === "sami" ? 0.92 : 0.87;
+    utterance.pitch = companion === "sami" ? 1.08 : 0.88;
     utterance.onstart = () => setSpeaking(true);
     utterance.onend = () => setSpeaking(false);
     utterance.onerror = () => setSpeaking(false);
     window.speechSynthesis.speak(utterance);
-  }, []);
+  }, [companion, voiceChoice, voices]);
 
     const sendMessage = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -219,50 +260,25 @@ function Lala() {
       mood: currentMood === "crisis" ? "sad" : currentMood,
     };
 
-    const conversationForGemini = [...messages, userMessage]
-      .slice(-12)
-      .map((message) => ({
-        role: message.role,
-        text: message.text,
-      }));
-
     setMessages((current) => [...current, userMessage].slice(-32));
     setMood(userMessage.mood);
     setInput("");
     setNotice("");
 
-    try {
-      const result = await getLalaGeminiReply({
-        data: {
-          companion,
-          messages: conversationForGemini,
-        },
-      });
+    const fallbackReply = getLalaReply(text, Math.random, {
+      recentUserMessages: messages.filter((message) => message.role === "user").slice(-2).map((message) => message.text),
+      previousReplies: messages.filter((message) => message.role === "lala").slice(-3).map((message) => message.text),
+    });
+    const lalaMessage: Message = {
+      id: `lala-${Date.now()}`,
+      role: "lala",
+      text: fallbackReply,
+      mood: userMessage.mood,
+    };
 
-      const lalaMessage: Message = {
-        id: `lala-${Date.now()}`,
-        role: "lala",
-        text: result.reply,
-        mood: userMessage.mood,
-      };
-
-      setMessages((current) => [...current, lalaMessage].slice(-32));
-      setMood(lalaMessage.mood);
-      speak(result.reply);
-    } catch {
-      const fallbackReply = getLalaReply(text);
-
-      const lalaMessage: Message = {
-        id: `lala-${Date.now()}`,
-        role: "lala",
-        text: fallbackReply,
-        mood: userMessage.mood,
-      };
-
-      setMessages((current) => [...current, lalaMessage].slice(-32));
-      setNotice("I’m having a small connection problem, so I’m using my offline replies for now.");
-      speak(fallbackReply);
-    }
+    setMessages((current) => [...current, lalaMessage].slice(-32));
+    setMood(lalaMessage.mood);
+    speak(fallbackReply);
   };
 
   const startListening = () => {
@@ -378,9 +394,21 @@ function Lala() {
               <div className="conversation-eyebrow">YOUR SPACE</div>
               <h2>A little check-in</h2>
             </div>
-            <div aria-label={speechAvailable ? "Spoken replies are available" : "Spoken replies aren’t available in this browser"} className={`voice-status${speechAvailable ? "" : " voice-unavailable"}`}>
+            <div aria-label={speechAvailable ? "Choose a voice for spoken replies" : "Spoken replies aren’t available in this browser"} className={`voice-status${speechAvailable ? "" : " voice-unavailable"}`}>
               <Volume2 aria-hidden="true" size={15} />
-              <span>Gentle voice</span>
+              <Select disabled={!speechAvailable || voices.length === 0} onValueChange={setVoiceChoice} value={voiceChoice}>
+                <SelectTrigger aria-label="Choose spoken voice" className="voice-select-trigger">
+                  <SelectValue placeholder="Auto voice" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="automatic">Automatic voice</SelectItem>
+                  {voices.map((voice) => (
+                    <SelectItem key={voice.voiceURI} value={voice.voiceURI}>
+                      {voice.name} · {voice.lang}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
