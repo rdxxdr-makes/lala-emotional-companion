@@ -97,6 +97,7 @@ function CompanionAvatar({ companion, mood, speaking }: { companion: Companion; 
       <ellipse className="ear" cx="129" cy="215" rx="17" ry="26" />
       <ellipse className="ear" cx="311" cy="215" rx="17" ry="26" />
       <ellipse className="face" cx="220" cy="198" rx="91" ry="111" />
+      <ellipse className="face-shade" cx="263" cy="228" rx="50" ry="72" />
       <ellipse className="face-light" cx="195" cy="157" rx="45" ry="52" />
       {sami ? (
         <g className="hair-front">
@@ -116,16 +117,23 @@ function CompanionAvatar({ companion, mood, speaking }: { companion: Companion; 
           <path className="hair-highlight" d="M176 83q26-35 57-27-24 6-37 35Z" />
         </g>
       )}
-      <path className="brow" d="M164 192q21-12 42 0M234 192q21-12 42 0" />
+      <path className="brow brow-left" d="M164 192q21-12 42 0" />
+      <path className="brow brow-right" d="M234 192q21-12 42 0" />
       <g className="left-eye">
         <ellipse className="eye-white" cx="185" cy="218" rx="12" ry="15" />
-        <ellipse className="pupil" cx="187" cy="220" rx="5" ry="8" />
-        <circle className="eye-shine" cx="189" cy="217" r="2" />
+        <g className="pupil-group">
+          <ellipse className="pupil" cx="187" cy="220" rx="5" ry="8" />
+          <circle className="eye-shine" cx="189" cy="217" r="2" />
+        </g>
+        <ellipse className="eyelid" cx="185" cy="212" rx="13" ry="15" />
       </g>
       <g className="right-eye">
         <ellipse className="eye-white" cx="255" cy="218" rx="12" ry="15" />
-        <ellipse className="pupil" cx="253" cy="220" rx="5" ry="8" />
-        <circle className="eye-shine" cx="255" cy="217" r="2" />
+        <g className="pupil-group">
+          <ellipse className="pupil" cx="253" cy="220" rx="5" ry="8" />
+          <circle className="eye-shine" cx="255" cy="217" r="2" />
+        </g>
+        <ellipse className="eyelid" cx="255" cy="212" rx="13" ry="15" />
       </g>
       <path className="nose" d="M219 227q-7 25 3 28" />
       <ellipse className="blush" cx="163" cy="257" rx="15" ry="7" />
@@ -173,7 +181,7 @@ function Lala() {
                 typeof message.id === "string" &&
                 (message.role === "lala" || message.role === "user") &&
                 typeof message.text === "string" &&
-                ["happy", "sad", "stressed", "lonely", "tired", "angry", "neutral"].includes(message.mood),
+                ["happy", "sad", "stressed", "anxious", "lonely", "tired", "angry", "neutral"].includes(message.mood),
             )
           ) {
             const restored = record.messages.slice(-32);
@@ -221,8 +229,8 @@ function Lala() {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
     const preferredTerms = companion === "sami"
-      ? /female|samantha|aria|jenny|zoe|ava|serena/i
-      : /male|david|guy|ryan|alex|daniel|james/i;
+      ? /female|samantha|aria|jenny|zira|hazel|sonia|natasha|michelle|emma|ava|allison|serena|kate|susan|moira|tessa|karen|veena|flo/i
+      : /male|david|guy|ryan|alex|daniel|james|george|russell|eric|brian|matthew|joey|christopher|william|rishi/i;
     const qualityTerms = /microsoft|google|natural|online|neural|premium|enhanced/i;
     const rankedVoices = voices
       .filter((voice) => voice.lang.toLowerCase().startsWith("en"))
