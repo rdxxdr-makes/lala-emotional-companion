@@ -49,7 +49,7 @@ describe("Lala's local emotional response matching", () => {
     expect(getLalaLanguage("Maine poori raat padha aur phir bhi fail ho gaya")).toBe("hinglish");
     const reply = getLalaReply("Maine poori raat padha aur phir bhi fail ho gaya", () => 0);
     expect(reply).toMatch(/\b(yaar|nahi|karo|sochen|batana|time lo|feel karo)\b/i);
-    expect(reply).not.toMatch(/\byaar\b/i.test(reply) === false ? /\bnope-never\b/ : /\bnope-never\b/);
+    expect(reply).not.toMatch(/\b(I'm|I’m|doesn't|doesn’t)\b/i);
   });
 
   it("answers the founder question in Hinglish for a Hinglish question", () => {
