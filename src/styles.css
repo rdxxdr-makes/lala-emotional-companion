@@ -175,7 +175,7 @@
 .privacy-dot, .online-mark span { display: block; width: 6px; height: 6px; border-radius: 50%; background: oklch(0.72 0.13 157); box-shadow: 0 0 10px oklch(0.72 0.13 157 / 40%); }
 
 .main-layout { display: grid; flex: 1; grid-template-columns: 1.02fr 0.98fr; width: min(100% - 128px, 1112px); min-height: 0; margin-inline: auto; }
-.presence-panel { position: relative; display: flex; min-height: 0; flex-direction: column; align-items: flex-start; justify-content: center; padding: 40px 36px 36px 8px; }
+.presence-panel { position: sticky; top: 0; display: flex; min-height: 0; max-height: calc(100svh - 142px); flex-direction: column; align-items: flex-start; justify-content: center; overflow: hidden; padding: 40px 36px 36px 8px; }
 .presence-copy { position: relative; z-index: 2; width: 100%; }
 .eyebrow { display: flex; align-items: center; gap: 8px; color: var(--primary); font-size: 10px; font-weight: 700; letter-spacing: 0.12em; }
 .presence-copy h1 { margin: 18px 0 12px; font-size: clamp(34px, 3.6vw, 48px); font-weight: 620; line-height: 1.13; letter-spacing: 0; }
@@ -199,11 +199,14 @@
 .collar { fill: color-mix(in oklab, var(--shirt-sami-light) 68%, var(--accent-peach)); }
 .portrait-ammy .collar { fill: color-mix(in oklab, var(--shirt-ammy-light) 78%, var(--foreground)); }
 .shirt-stitch { fill: none; stroke: oklch(0.95 0.04 286 / 17%); stroke-linecap: round; stroke-width: 2; }
-.brow { fill: none; stroke: var(--hair-sami-dark); stroke-linecap: round; stroke-width: 4.5; }
+.brow { fill: none; stroke: var(--hair-sami-dark); stroke-linecap: round; stroke-width: 4.5; transform-box: fill-box; transform-origin: center; transition: transform .45s ease; }
 .portrait-ammy .brow { stroke: var(--hair-ammy-dark); }
 .eye-white { fill: oklch(0.99 0.012 82); transform-box: fill-box; transform-origin: center; animation: blink 5.3s infinite; }
 .pupil { fill: oklch(0.24 0.07 41); transform-box: fill-box; transform-origin: center; animation: blink 5.3s infinite; }
 .eye-shine { fill: oklch(1 0 0 / 90%); }
+.pupil-group { transform-box: fill-box; transform-origin: center; animation: gaze 14s ease-in-out infinite; }
+.eyelid { fill: var(--skin); transform-box: fill-box; transform-origin: 50% 0; animation: blink-lid 5.3s infinite; }
+.face-shade { fill: oklch(0.6 0.08 40 / 13%); }
 .nose { fill: none; stroke: var(--skin-shadow); stroke-linecap: round; stroke-width: 3; }
 .blush { fill: oklch(0.69 0.12 15 / 22%); opacity: .68; transition: opacity .3s ease; }
 .mouth-group {
@@ -223,6 +226,7 @@
   stroke: oklch(0.43 0.13 14);
   stroke-linecap: round;
   stroke-width: 4;
+  transition: d .35s ease;
 }
 
 .portrait-speaking .mouth-group {
@@ -235,7 +239,16 @@
 }
 .mood-happy .blush { opacity: 1; }
 .mood-sad .brow { stroke-width: 5.4; }
-.mood-tired .eye-white, .mood-tired .pupil { animation-duration: 7.8s; }
+.mood-happy .brow-left, .mood-happy .brow-right { transform: translateY(-3px); }
+.mood-sad .brow-left { transform: rotate(-6deg) translateY(2px); }
+.mood-sad .brow-right { transform: rotate(6deg) translateY(2px); }
+.mood-anxious .brow-left, .mood-stressed .brow-left { transform: rotate(-3deg) translateY(1px); }
+.mood-anxious .brow-right, .mood-stressed .brow-right { transform: rotate(3deg) translateY(1px); }
+.mood-lonely .brow-left, .mood-lonely .brow-right { transform: translateY(-2px); }
+.mood-tired .brow-left, .mood-tired .brow-right { transform: translateY(3px); }
+.mood-angry .brow-left { transform: rotate(7deg) translateY(2px); }
+.mood-angry .brow-right { transform: rotate(-7deg) translateY(2px); }
+.mood-tired .eye-white, .mood-tired .pupil, .mood-tired .eyelid { animation-duration: 7.8s; }
 .portrait-caption { position: absolute; right: 0; bottom: 3%; left: 0; display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--text-soft); font-size: 11px; }
 .online-mark { display: flex; gap: 3px; padding-right: 4px; }
 .online-mark span:nth-child(2) { opacity: .65; }
@@ -245,7 +258,7 @@
 .presence-footnote { display: flex; align-items: center; gap: 11px; margin-top: auto; padding-top: 11px; color: var(--text-soft); font-size: 11px; }
 .footnote-line { width: 23px; height: 1px; background: var(--mood-accent); opacity: .8; transition: background .4s; }
 
-.conversation-panel { display: flex; min-height: 575px; flex-direction: column; align-self: center; margin-block: 43px; padding: 25px 24px 19px; border: 1px solid oklch(0.89 0.06 293 / 11%); border-radius: 15px; background: linear-gradient(151deg, oklch(0.205 0.055 283 / 81%), oklch(0.17 0.05 280 / 86%)); box-shadow: 0 26px 78px oklch(0.09 0.045 285 / 21%), inset 0 1px oklch(1 0 0 / 4%); }
+.conversation-panel { display: flex; height: clamp(470px, calc(100svh - 178px), 768px); flex-direction: column; align-self: center; margin-block: auto; padding: 25px 24px 19px; border: 1px solid oklch(0.89 0.06 293 / 11%); border-radius: 15px; background: linear-gradient(151deg, oklch(0.205 0.055 283 / 81%), oklch(0.17 0.05 280 / 86%)); box-shadow: 0 26px 78px oklch(0.09 0.045 285 / 21%), inset 0 1px oklch(1 0 0 / 4%); }
 .conversation-header { display: flex; min-height: 58px; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
 .conversation-eyebrow { margin-bottom: 5px; color: var(--text-soft); font-size: 9px; font-weight: 680; letter-spacing: .13em; }
 .conversation-header h2 { margin: 0; font-size: 17px; font-weight: 610; letter-spacing: 0; }
@@ -286,6 +299,8 @@
 @keyframes avatar-breathe { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-6px) scale(1.008); } }
 @keyframes halo-pulse { 0%, 100% { opacity: .66; transform: scale(.98); } 50% { opacity: 1; transform: scale(1.015); } }
 @keyframes blink { 0%, 41%, 45%, 89%, 93%, 100% { transform: scaleY(1); } 43%, 91% { transform: scaleY(.08); } }
+@keyframes blink-lid { 0%, 41%, 45%, 89%, 93%, 100% { transform: scaleY(0); } 43%, 91% { transform: scaleY(1); } }
+@keyframes gaze { 0%, 100% { transform: translate(0, 0); } 28% { transform: translate(1.5px, .6px); } 52% { transform: translate(-1.3px, .9px); } 74% { transform: translate(.4px, -.6px); } }
 @keyframes mouth-talk {
   from { transform: translateY(1px) scaleY(.9); }
   to { transform: translateY(-1px) scaleY(1.08); }
@@ -300,7 +315,7 @@
 
 @media (min-width: 1500px) {
   .main-layout { width: min(100% - 152px, 1192px); }
-  .conversation-panel { min-height: 650px; }
+  .conversation-panel { height: clamp(650px, calc(100svh - 178px), 810px); }
 }
 @media (max-width: 900px) {
   .topbar, .page-footer { width: calc(100% - 44px); }
@@ -308,7 +323,7 @@
   .presence-panel { padding-right: 20px; }
   .presence-copy h1 { font-size: 36px; }
   .portrait-stage { width: min(100%, 356px); }
-  .conversation-panel { min-height: 540px; margin-block: 33px; padding: 20px 18px 15px; }
+  .conversation-panel { height: clamp(540px, calc(100svh - 178px), 720px); margin-block: auto; padding: 20px 18px 15px; }
   .switcher-label { margin-left: 8px; }
 }
 @media (max-width: 660px) {
@@ -330,7 +345,7 @@
   .online-mark { gap: 2px; padding-right: 1px; }
   .online-mark span { width: 5px; height: 5px; }
   .presence-footnote { display: none; }
-  .conversation-panel { min-height: 420px; flex: 1; margin-block: 4px 16px; padding: 16px 14px 13px; border-radius: 13px; }
+  .conversation-panel { min-height: 420px; height: auto; flex: 1; margin-block: 4px 16px; padding: 16px 14px 13px; border-radius: 13px; }
   .conversation-header { min-height: 49px; padding-bottom: 12px; }
   .conversation-header h2 { font-size: 15px; }
   .conversation-eyebrow { font-size: 8px; }
@@ -355,7 +370,7 @@
   .presence-panel { padding-top: 22px; padding-bottom: 22px; }
   .presence-copy h1 { font-size: 38px; }
   .portrait-stage { width: min(100%, 336px); }
-  .conversation-panel { min-height: 490px; margin-block: 24px; }
+  .conversation-panel { height: clamp(470px, calc(100svh - 156px), 590px); margin-block: auto; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
