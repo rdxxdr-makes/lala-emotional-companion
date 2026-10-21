@@ -64,7 +64,7 @@ describe("Lala's local emotional response matching", () => {
 
   it("follows the ongoing emotion from the latest three messages", () => {
     const reply = getLalaReply("still the same", Math.random, {
-      recentUserMessages: ["I feel lonely", "so alone lately", "no one around"],
+      recentUserMessages: ["I feel lonely", "so alone lately", "feeling isolated"],
       previousReplies: [],
     });
     expect(reply).toMatch(/connection|alone|silence|reached out|miss/i);
